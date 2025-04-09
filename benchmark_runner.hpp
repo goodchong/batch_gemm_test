@@ -51,8 +51,13 @@ void run_benchmarks(int batch_size, int M, int N, int K, int num_iterations) {
             CUDA_CHECK(cudaGetDeviceProperties(&deviceProp, 0));
             std::cout << "Using GPU: " << deviceProp.name << std::endl;
 
-            double gpu_avg_time = benchmark_gpu_cublas<T>(h_A, h_B, h_C_gpu, batch_size, M, N, K, num_iterations);
-            std::cout << "GPU (cuBLAS) Average Time: " << gpu_avg_time << " ms" << std::endl;
+            GpuTimings gpu_times = benchmark_gpu_cublas<T>(h_A, h_B, h_C_gpu, batch_size, M, N, K, num_iterations);
+            std::cout << "GPU (cuBLAS) H2D Copy Time:  " << gpu_times.h2d_ms << " ms" << std::endl;
+            std::cout << "GPU (cuBLAS) Compute Time: " << gpu_times.compute_ms << " ms (avg per iteration)" << std::endl;
+            std::cout << "GPU (cuBLAS) D2H Copy Time:  " << gpu_times.d2h_ms << " ms" << std::endl;
+            double total_gpu_time = gpu_times.h2d_ms + (gpu_times.compute_ms * num_iterations) + gpu_times.d2h_ms; // Rough total, compute avg needs scaling
+            std::cout << "GPU (cuBLAS) Approx Total: " << total_gpu_time << " ms (for " << num_iterations << " iterations)" << std::endl;
+
 
             // Optional: Add verification step comparing h_C_cpu and h_C_gpu
 
