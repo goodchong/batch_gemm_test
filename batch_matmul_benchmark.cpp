@@ -33,7 +33,7 @@ do {                                                                      \
         /* like CUDA runtime. You might need to map status codes manually */ \
         /* if more detailed error reporting is needed. */                 \
         exit(EXIT_FAILURE);                                               \
-    }                                                                     \
+    }                                                                     
 } while (0)
 
 
@@ -139,7 +139,7 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
     size_t size_A = static_cast<size_t>(batch_size) * M * K * sizeof(T);
     size_t size_B = static_cast<size_t>(batch_size) * K * N * sizeof(T);
     size_t size_C = static_cast<size_t>(batch_size) * M * N * sizeof(T);
-    std::chrono::duration<double, std::milli> elapsed = end - start;
+    // Note: 'elapsed' is now calculated inside the if/else blocks below
 
     // Allocate memory on GPU
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_A), size_A));
@@ -284,7 +284,7 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
 
     // Copy result back to host (optional, for verification)
     // CUDA_CHECK(cudaMemcpy(h_C.data(), d_C, size_C, cudaMemcpyDeviceToHost));
-    std::chrono::duration<double, std::milli> elapsed = end - start;
+    // Note: 'elapsed' calculation moved inside the if/else blocks above
 
 
     // Copy result back to host (optional, for verification)
