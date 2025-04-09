@@ -1,1 +1,17 @@
 .aider*
+# Ignore CMake build directory
+build/
+
+# Ignore other common build/tooling files (optional but good practice)
+*.o
+*.so
+*.a
+*.dll
+*.exe
+*.out
+*.log
+*.swp
+*~
+.DS_Store
+.vscode/
+.idea/
