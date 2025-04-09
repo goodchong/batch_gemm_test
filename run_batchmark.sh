@@ -4,7 +4,7 @@
 EXECUTABLE="./build/batch_matmul_benchmark"
 BATCH_SIZE=20000
 ITERATIONS=1
-MKN_VALUES=(10 20 30 60 100 150 200 250 300)
+MKN_VALUES=(10 20 30 60 80 100 150 200 250 300)
 PRECISIONS=("float" "double")
 
 # --- Sanity Check ---

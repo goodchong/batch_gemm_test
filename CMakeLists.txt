@@ -25,6 +25,8 @@ if(DEFINED ENV{MKLROOT})
     if(OpenMP_FOUND)
         # Order matters: Interface layer, Threading layer, Core library, OpenMP runtime
         set(MKL_LIBRARIES ${MKL_INTEL_LP64_LIB} ${MKL_THREADING_LIB} ${MKL_CORE_LIB} ${OpenMP_CXX_LIBRARIES})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+
          message(STATUS "Found OpenMP, linking with threaded MKL: ${MKL_LIBRARIES}")
     else()
          # This block should ideally not be reached if OpenMP is REQUIRED, but kept for robustness
@@ -80,6 +82,7 @@ target_include_directories(batch_matmul_benchmark PRIVATE
     ${MKL_INCLUDE_DIR}
     ${CUDA_INCLUDE_DIRS}
 )
+target_link_libraries(batch_matmul_benchmark PUBLIC OpenMP::OpenMP_CXX)
 
 target_link_libraries(batch_matmul_benchmark PRIVATE
     ${MKL_LIBRARIES}      # Contains MKL interface, threading, core, and potentially OpenMP already
@@ -88,6 +91,7 @@ target_link_libraries(batch_matmul_benchmark PRIVATE
     ${OpenMP_CXX_LIBRARIES} # Explicitly add OpenMP again to help linker resolve symbols
     pthread               # Often needed with MKL/CUDA on Linux
     dl                    # Often needed on Linux
+    iomp5                 # Explicitly link iomp5 if needed (rare)
 )
 
 # Optional: Set compiler flags if needed (e.g., optimization)

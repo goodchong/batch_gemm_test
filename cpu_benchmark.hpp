@@ -39,7 +39,7 @@ double benchmark_cpu_mkl(const std::vector<T>& h_A, const std::vector<T>& h_B, s
     T alpha = static_cast<T>(1.0);
     T beta = static_cast<T>(0.0);
     MKL_INT group_size = batch_size; // Number of matrices in the batch
-
+    std::cout << "start cpu gemm" << group_size << std::endl;
     // Select MKL function based on type T
     if constexpr (std::is_same<T, float>::value) {
         // Warm-up run

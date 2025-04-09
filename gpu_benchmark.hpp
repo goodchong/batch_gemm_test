@@ -30,14 +30,14 @@ GpuTimings benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>&
     GpuTimings timings;
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     std::chrono::duration<double, std::milli> elapsed;
+    // --- H2D Copy Timing ---
+    start = std::chrono::high_resolution_clock::now();
 
     // Allocate memory on GPU
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_A), size_A));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_B), size_B));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_C), size_C));
 
-    // --- H2D Copy Timing ---
-    start = std::chrono::high_resolution_clock::now();
     CUDA_CHECK(cudaMemcpy(d_A, h_A.data(), size_A, cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(d_B, h_B.data(), size_B, cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemset(d_C, 0, size_C)); // Include memset as part of setup before compute
