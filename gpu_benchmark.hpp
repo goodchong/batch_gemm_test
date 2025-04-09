@@ -19,6 +19,13 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
     size_t size_B = static_cast<size_t>(batch_size) * K * N * sizeof(T);
     size_t size_C = static_cast<size_t>(batch_size) * M * N * sizeof(T);
 
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end; // Declare start/end here
+    std::chrono::duration<double, std::milli> elapsed;
+
+
+
+    start = std::chrono::high_resolution_clock::now();
+
     // Allocate memory on GPU
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_A), size_A));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_B), size_B));
@@ -46,7 +53,6 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
     const T* alpha = &alpha_val;
     const T* beta = &beta_val;
 
-
     // Pointers to device memory arrays
     std::vector<const T*> d_A_array(batch_size);
     std::vector<const T*> d_B_array(batch_size);
@@ -61,6 +67,7 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
     const T **d_A_ptrs = nullptr;
     const T **d_B_ptrs = nullptr;
     T **d_C_ptrs = nullptr;
+
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_A_ptrs), batch_size * sizeof(const T*)));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_B_ptrs), batch_size * sizeof(const T*)));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_C_ptrs), batch_size * sizeof(T*)));
@@ -73,23 +80,8 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
 
     // Select cuBLAS function based on type T
     cublasStatus_t cublas_status;
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end; // Declare start/end here
-    std::chrono::duration<double, std::milli> elapsed;
 
     if constexpr (std::is_same<T, float>::value) {
-        // Warm-up run
-        cublas_status = cublasSgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N,
-                                           N, M, K,
-                                           reinterpret_cast<const float*>(alpha),
-                                           reinterpret_cast<const float**>(d_B_ptrs), ldb,
-                                           reinterpret_cast<const float**>(d_A_ptrs), lda,
-                                           reinterpret_cast<const float*>(beta),
-                                           reinterpret_cast<float**>(d_C_ptrs), ldc,
-                                           batch_size);
-        CUBLAS_CHECK(cublas_status);
-        CUDA_CHECK(cudaDeviceSynchronize()); // Sync after warm-up
-
-        start = std::chrono::high_resolution_clock::now();
         for (int iter = 0; iter < num_iterations; ++iter) {
              cublas_status = cublasSgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N,
                                                N, M, K,
@@ -102,23 +94,9 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
              // CUBLAS_CHECK(cublas_status); // Optional: Check status inside loop
         }
         CUDA_CHECK(cudaDeviceSynchronize()); // Sync before stopping timer
-        end = std::chrono::high_resolution_clock::now();
-        elapsed = end - start;
 
     } else if constexpr (std::is_same<T, double>::value) {
-        // Warm-up run
-        cublas_status = cublasDgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N,
-                                           N, M, K,
-                                           reinterpret_cast<const double*>(alpha),
-                                           reinterpret_cast<const double**>(d_B_ptrs), ldb,
-                                           reinterpret_cast<const double**>(d_A_ptrs), lda,
-                                           reinterpret_cast<const double*>(beta),
-                                           reinterpret_cast<double**>(d_C_ptrs), ldc,
-                                           batch_size);
-        CUBLAS_CHECK(cublas_status);
-        CUDA_CHECK(cudaDeviceSynchronize()); // Sync after warm-up
 
-        start = std::chrono::high_resolution_clock::now();
         for (int iter = 0; iter < num_iterations; ++iter) {
              cublas_status = cublasDgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N,
                                                N, M, K,
@@ -131,8 +109,6 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
              // CUBLAS_CHECK(cublas_status); // Optional: Check status inside loop
         }
         CUDA_CHECK(cudaDeviceSynchronize()); // Sync before stopping timer
-        end = std::chrono::high_resolution_clock::now();
-        elapsed = end - start;
 
     } else {
          // Cleanup before throwing
@@ -145,9 +121,8 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
          cublasDestroy(handle);
          throw std::runtime_error("Unsupported data type for cuBLAS benchmark");
     }
-
-    // Copy result back to host (optional, for verification)
-    // CUDA_CHECK(cudaMemcpy(h_C.data(), d_C, size_C, cudaMemcpyDeviceToHost));
+    // Copy the arrays of result from device to host
+    CUDA_CHECK(cudaMemcpy(h_C.data(), d_C, size_C, cudaMemcpyDeviceToHost));
 
     // Cleanup
     CUDA_CHECK(cudaFree(d_A));
@@ -157,6 +132,9 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
     CUDA_CHECK(cudaFree(d_B_ptrs));
     CUDA_CHECK(cudaFree(d_C_ptrs));
     CUBLAS_CHECK(cublasDestroy(handle));
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed = end - start;
 
     return elapsed.count() / num_iterations;
 }
