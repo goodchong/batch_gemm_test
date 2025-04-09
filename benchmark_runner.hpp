@@ -25,6 +25,7 @@ void run_benchmarks(int batch_size, int M, int N, int K, int num_iterations) {
 
     // --- Initialization ---
     std::vector<T> h_A, h_B;
+    std::cout << "Initializing matrices..." << std::endl;
     initialize_matrices<T>(h_A, h_B, batch_size, M, N, K);
     std::vector<T> h_C_cpu(static_cast<size_t>(batch_size) * M * N);
     std::vector<T> h_C_gpu(static_cast<size_t>(batch_size) * M * N); // Separate result buffer for GPU
