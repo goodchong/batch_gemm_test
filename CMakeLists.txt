@@ -64,9 +64,15 @@ else()
 endif()
 
 # --- Add Executable ---
-add_executable(batch_matmul_benchmark batch_matmul_benchmark.cpp)
+# List all source files needed for the executable
+add_executable(batch_matmul_benchmark
+    main.cpp
+    utils.cpp
+    # Headers are included, not listed here unless using specific CMake features
+)
 
 # --- Link Libraries ---
+# Target the executable directly
 target_include_directories(batch_matmul_benchmark PRIVATE
     ${MKL_INCLUDE_DIR}
     ${CUDA_INCLUDE_DIRS}
