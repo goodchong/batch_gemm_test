@@ -33,7 +33,7 @@ do {                                                                      \
         /* like CUDA runtime. You might need to map status codes manually */ \
         /* if more detailed error reporting is needed. */                 \
         exit(EXIT_FAILURE);                                               \
-    }
+    } \
 } while (0)
 
 
@@ -208,6 +208,8 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
     // by setting the leading dimensions correctly and NOT transposing.
     // Select cuBLAS function based on type T
     cublasStatus_t cublas_status;
+    std::chrono::duration<double, std::milli> elapsed;
+
     if constexpr (std::is_same<T, float>::value) {
         // Warm-up run
         cublas_status = cublasSgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N,
@@ -280,8 +282,6 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
          throw std::runtime_error("Unsupported data type for cuBLAS benchmark");
     }
 
-    std::chrono::duration<double, std::milli> elapsed = end - start; // This line is now inside the if/else blocks
-
     // Copy result back to host (optional, for verification)
     // CUDA_CHECK(cudaMemcpy(h_C.data(), d_C, size_C, cudaMemcpyDeviceToHost));
     // Note: 'elapsed' calculation moved inside the if/else blocks above
@@ -298,9 +298,9 @@ double benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>& h_B
     CUDA_CHECK(cudaFree(d_B_ptrs));
     CUDA_CHECK(cudaFree(d_C_ptrs));
     CUBLAS_CHECK(cublasDestroy(handle));
-
     // Note: elapsed calculation moved inside the if/else blocks above
     return elapsed.count() / num_iterations;
+
 }
 
 
