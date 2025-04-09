@@ -17,23 +17,26 @@ if(DEFINED ENV{MKLROOT})
     # Common paths: ${MKL_ROOT}/lib/intel64, ${MKL_ROOT}/lib
     find_library(MKL_CORE_LIB NAMES mkl_core PATHS ${MKL_ROOT}/lib ${MKL_ROOT}/lib/intel64)
     find_library(MKL_INTEL_LP64_LIB NAMES mkl_intel_lp64 PATHS ${MKL_ROOT}/lib ${MKL_ROOT}/lib/intel64)
-    find_library(MKL_SEQUENTIAL_LIB NAMES mkl_sequential PATHS ${MKL_ROOT}/lib ${MKL_ROOT}/lib/intel64) # Or mkl_tbb_thread for threaded
-    find_library(MKL_THREADING_LIB NAMES mkl_sequential PATHS ${MKL_ROOT}/lib ${MKL_ROOT}/lib/intel64) # Defaulting to sequential, change to mkl_intel_thread or mkl_gnu_thread if needed
+    # find_library(MKL_SEQUENTIAL_LIB NAMES mkl_sequential PATHS ${MKL_ROOT}/lib ${MKL_ROOT}/lib/intel64) # No longer needed for threaded
+    find_library(MKL_THREADING_LIB NAMES mkl_intel_thread PATHS ${MKL_ROOT}/lib ${MKL_ROOT}/lib/intel64) # Use mkl_intel_thread for OpenMP threading
 
-    # Find OpenMP library (often needed by MKL) - adjust based on your compiler
-    find_package(OpenMP)
+    # Find OpenMP library (often needed by MKL threaded layer) - adjust based on your compiler
+    find_package(OpenMP REQUIRED) # Make OpenMP required when using threaded MKL
     if(OpenMP_FOUND)
-        set(MKL_LIBRARIES ${MKL_INTEL_LP64_LIB} ${MKL_SEQUENTIAL_LIB} ${MKL_CORE_LIB} ${OpenMP_CXX_LIBRARIES}) # Order can matter
-         message(STATUS "Found OpenMP, linking with MKL: ${MKL_LIBRARIES}")
+        # Order matters: Interface layer, Threading layer, Core library, OpenMP runtime
+        set(MKL_LIBRARIES ${MKL_INTEL_LP64_LIB} ${MKL_THREADING_LIB} ${MKL_CORE_LIB} ${OpenMP_CXX_LIBRARIES})
+         message(STATUS "Found OpenMP, linking with threaded MKL: ${MKL_LIBRARIES}")
     else()
-         # Might need iomp5 library explicitly if OpenMP find_package fails
+         # This block should ideally not be reached if OpenMP is REQUIRED, but kept for robustness
+         # Might need iomp5 library explicitly if OpenMP find_package fails (less common with modern CMake)
          find_library(MKL_IOMP5_LIB NAMES libiomp5md.dll iomp5 PATHS ${MKL_ROOT}/../compiler/lib/intel64_win ${MKL_ROOT}/../compiler/lib/intel64 ${MKL_ROOT}/lib ${MKL_ROOT}/lib/intel64 /opt/intel/compilers_and_libraries/linux/lib/intel64)
          if(MKL_IOMP5_LIB)
-             set(MKL_LIBRARIES ${MKL_INTEL_LP64_LIB} ${MKL_SEQUENTIAL_LIB} ${MKL_CORE_LIB} ${MKL_IOMP5_LIB})
-             message(STATUS "Linking MKL with explicit iomp5: ${MKL_LIBRARIES}")
+             # Order matters: Interface layer, Threading layer, Core library, OpenMP runtime
+             set(MKL_LIBRARIES ${MKL_INTEL_LP64_LIB} ${MKL_THREADING_LIB} ${MKL_CORE_LIB} ${MKL_IOMP5_LIB})
+             message(STATUS "Linking threaded MKL with explicit iomp5: ${MKL_LIBRARIES}")
          else()
-             message(WARNING "OpenMP library not found automatically, MKL linking might be incomplete.")
-             set(MKL_LIBRARIES ${MKL_INTEL_LP64_LIB} ${MKL_SEQUENTIAL_LIB} ${MKL_CORE_LIB})
+             message(FATAL_ERROR "OpenMP library (required for mkl_intel_thread) not found automatically or explicitly. MKL linking failed.")
+             # set(MKL_LIBRARIES ${MKL_INTEL_LP64_LIB} ${MKL_THREADING_LIB} ${MKL_CORE_LIB}) # This would likely fail at runtime
          endif()
     endif()
 
@@ -41,8 +44,8 @@ else()
     message(FATAL_ERROR "MKLROOT environment variable not set. Cannot find MKL.")
 endif()
 
-if(NOT MKL_INCLUDE_DIR OR NOT MKL_CORE_LIB OR NOT MKL_INTEL_LP64_LIB OR NOT MKL_SEQUENTIAL_LIB)
-    message(FATAL_ERROR "Could not find all required MKL components (include dir, core, lp64, sequential libs). Check MKLROOT and library paths.")
+if(NOT MKL_INCLUDE_DIR OR NOT MKL_CORE_LIB OR NOT MKL_INTEL_LP64_LIB OR NOT MKL_THREADING_LIB)
+    message(FATAL_ERROR "Could not find all required MKL components (include dir, core, lp64, threading libs). Check MKLROOT and library paths.")
 endif()
 
 # --- Find CUDA ---
