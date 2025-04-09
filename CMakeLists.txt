@@ -82,11 +82,12 @@ target_include_directories(batch_matmul_benchmark PRIVATE
 )
 
 target_link_libraries(batch_matmul_benchmark PRIVATE
-    ${MKL_LIBRARIES}
-    ${CUDA_LIBRARIES} # Includes cuda_runtime
+    ${MKL_LIBRARIES}      # Contains MKL interface, threading, core, and potentially OpenMP already
+    ${CUDA_LIBRARIES}     # Includes cuda_runtime
     ${CUBLAS_LIBRARY}
-    pthread # Often needed with MKL/CUDA on Linux
-    dl      # Often needed on Linux
+    ${OpenMP_CXX_LIBRARIES} # Explicitly add OpenMP again to help linker resolve symbols
+    pthread               # Often needed with MKL/CUDA on Linux
+    dl                    # Often needed on Linux
 )
 
 # Optional: Set compiler flags if needed (e.g., optimization)
