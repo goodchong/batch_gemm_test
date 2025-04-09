@@ -33,7 +33,7 @@ do {                                                                      \
         /* like CUDA runtime. You might need to map status codes manually */ \
         /* if more detailed error reporting is needed. */                 \
         exit(EXIT_FAILURE);                                               \
-    }                                                                     
+    }
 } while (0)
 
 
