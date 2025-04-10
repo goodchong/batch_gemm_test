@@ -55,7 +55,7 @@ double benchmark_cpu_mkl(const std::vector<T>& h_A, const std::vector<T>& h_B, s
         }
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> elapsed = end - start;
-        return elapsed.count() / num_iterations;
+        return elapsed.count();
     } else if constexpr (std::is_same<T, double>::value) {
          // Warm-up run
         cblas_dgemm_batch(CblasRowMajor, &transA, &transB, &m_mkl, &n_mkl, &k_mkl,
@@ -70,7 +70,7 @@ double benchmark_cpu_mkl(const std::vector<T>& h_A, const std::vector<T>& h_B, s
         }
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> elapsed = end - start;
-        return elapsed.count() / num_iterations;
+        return elapsed.count();
     } else {
         throw std::runtime_error("Unsupported data type for MKL benchmark");
     }

@@ -149,7 +149,7 @@ GpuTimings benchmark_gpu_cublas(const std::vector<T>& h_A, const std::vector<T>&
     CUDA_CHECK(cudaDeviceSynchronize()); // Sync after compute kernels finish
     end = std::chrono::high_resolution_clock::now();
     elapsed = end - start;
-    timings.compute_ms = elapsed.count() / num_iterations; // Average compute time
+    timings.compute_ms = elapsed.count(); // Average compute time
     // --- End Compute Timing ---
 
 

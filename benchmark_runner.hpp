@@ -55,7 +55,7 @@ void run_benchmarks(int batch_size, int M, int N, int K, int num_iterations) {
             std::cout << "GPU (cuBLAS) H2D Copy Time:  " << gpu_times.h2d_ms << " ms" << std::endl;
             std::cout << "GPU (cuBLAS) Compute Time: " << gpu_times.compute_ms << " ms (avg per iteration)" << std::endl;
             std::cout << "GPU (cuBLAS) D2H Copy Time:  " << gpu_times.d2h_ms << " ms" << std::endl;
-            double total_gpu_time = gpu_times.h2d_ms + (gpu_times.compute_ms * num_iterations) + gpu_times.d2h_ms; // Rough total, compute avg needs scaling
+            double total_gpu_time = gpu_times.h2d_ms + (gpu_times.compute_ms) + gpu_times.d2h_ms; // Rough total, compute avg needs scaling
             std::cout << "GPU (cuBLAS) Approx Total: " << total_gpu_time << " ms (for " << num_iterations << " iterations)" << std::endl;
 
 
